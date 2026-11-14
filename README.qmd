@@ -1,0 +1,339 @@
+---
+title: "Wine Quality"
+author: Destiny McKenzie
+format: pdf
+---
+
+# Introduction
+
+The goals of this Deliverable:
+
+1.  Get more familiar with R Markdown & GitHub
+
+2.  Learn about EDA in R
+
+3.  Generate Data Visualizations for EDA
+
+4.  Perform EDA using R
+
+For this Capstone Deliverable, extract some “actionable” insights from the UCI Wine Quality Data Set. A wine producer has hired you to better understand what factors affect wine quality. Hence, for this deliverable, follow the Data Science process discussed in class.
+
+# Business Understanding
+
+**What makes good quality wine?**
+
+Wine quality depends on a multitude of factors that are interconnected, ranging from the fruit used to the activity of the yeast during the fermentation process. Understanding the factors will give a clear picture of the science and the intricacy behind what makes good wine.
+
+Wine quality begins in the vineyard with terroir which is the unique combination of soil, climate, and altitude that shapes a grape's chemical makeup. Terroir relies on the sugar to alcohol conversion, where yeast transforms fruit sugars into ethanol at a rate of about 0.461 grams of alcohol per gram of sugar. Tannins are extracted from grape skins, seeds, and oak barrels and creates a dry, puckering sensation in young red wines, which drives the aging potential because the tannin molecules bond together over time into smoother chains, while white wines rely on acidity and sugar to age gracefully.
+
+The Vinho Verde datasets capture only part of this picture. They include measurements related to acidity (fixed acidity, volatile acidity, citric acid, pH), sweetness and fermentation (residual sugar, alcohol, density), and preservation (free and total sulfur dioxide, sulphates, chlorides), along with a sensory quality score. They do not include grape variety, vineyard conditions, yeast strain, or tannin levels, so factors like terroir and tannin structure cannot be tested directly. This analysis therefore focuses on which measurable chemical properties are associated with higher quality ratings, and the findings should be read as associations, not as a complete recipe for good wine. Red and white wines differ fundamentally because red wines are fermented with their grape skins and seeds at warmer temperatures (20–30°C) to extract deep color, rich flavors, and drying tannins, whereas white wines are pressed immediately and fermented juice-only at cooler temperatures (15–18°C) to preserve crisp acidity and delicate floral aromas. Consequently, red wines rely on tannins for structure, body, and long-term aging, while white wines depend on high acidity for their refreshing bite and preservation.
+
+# Data Understanding
+
+The datasets that are being used are redwine.csv and whitewine.csv, related to red and white wine variants of the Portuguese "Vinho Verde" wine. There are a total of 6497 total observations across both datasets. Only physicochemical and sensory variables are available meaning that there is not data about grape types, wine brand, and wine selling price. Both sets contain the same 12 variables with no missing values. The sets come from website: https://archive.ics.uci.edu/dataset/186/wine+quality
+
+Based on the datasets these are columns in the table:
+
+- fixed acidity
+
+- volatile acidity
+
+- citric acid
+
+- residual sugar
+
+- chlorides
+
+- free sulfur dioxide
+
+- total sulfur dioxide
+
+- density
+
+- pH
+
+- sulphates
+
+- alcohol
+
+  Output variable (based on sensory data):
+
+- quality (score between 0 and 10)
+
+## Loading Data and Creating Description Table
+
+```{r}
+# load the datasets
+red_wine <- read.csv("redwine.csv")
+white_wine <-read.csv("whitewine.csv")
+```
+
+```{r}
+# description table
+library(tibble)  
+
+missing_val <- colSums(is.na(red_wine))
+colSums(is.na(white_wine))
+
+data <- tibble(
+column_name = names(red_wine),
+  type = c("Ratio", "Ratio", "Ratio", "Ratio","Ratio","Ratio","Ratio", 
+           "Ratio","Interval","Ratio","Ratio", "Ordinal"),
+  description = c(
+  "Acids that do not evaporate easily (primarily tartaric acid). Higher values generally contribute to tartness and stability.",
+  "Volatile acids, mainly acetic acid. High levels can create a vinegar-like taste and are usually undesirable.",
+  "Amount of citric acid present. Can add freshness and flavor complexity to the wine.",
+  "Sugar remaining after fermentation has finished. Higher values generally make wine taste sweeter.",
+  "Salt content in the wine. Excessive levels may negatively affect taste.",
+  "Portion of sulfur dioxide available to prevent microbial growth and oxidation.",
+  "Total amount of sulfur dioxide (free + bound forms). Used as a preservative.",
+  "Density of the wine (g/cm³). Influenced by alcohol and sugar content.",
+  "Measure of acidity/basicity. Lower pH indicates a more acidic wine.",
+  "Potassium sulfate and related compounds. Can contribute to sulfur dioxide levels and may improve wine stability and quality.",
+  "Alcohol percentage by volume (% ABV).",
+  "Wine quality score assigned by sensory experts, ranging from 0 to 10. This is the target variable."
+),
+  role     = c("feature", "feature", "feature", "feature", "feature", "feature", 
+               "feature", "feature", "feature", "feature", "feature", "target"),
+  units       = c(NA, NA, NA, NA, NA, NA, NA,
+  "g/cm³",
+  "pH scale",
+  NA, "percent",
+  "quality score (0-10)"), 
+
+  missing     = missing_val
+)
+
+data
+```
+
+# Data Preparation
+
+The data can be accessed through the previously loaded datasets red_wine and white_wine, which were used to create the data description table. The datasets contain no missing values, so no additional pre-processing is required prior to model development. Therefore, the data are considered ready for analysis. Because the data are separated into two datasets, one for red wine and one for white wine, a two-stage analysis will be conducted to investigate the factors associated with wine quality. Stage 1 will focus on the red_wine dataset, and Stage 2 will focus on the white_wine dataset.
+
+# Modeling + Evaluating
+
+We begin by evaluating the distribution of key variables in the datasets. This analysis will help determine the characteristics of variables and findings for the research question. Correlation between variables is also an important feature to be analyzed, so the relationship between variables can be determined.
+
+## Exploratory Data Analysis
+
+### Stage 1 - Red Wine
+
+```{r}
+# looking at the trends for red wine
+summary(red_wine)
+
+# creating histograms to see visuals of the trends
+par(mfrow = c(2,3))
+hist(red_wine$fixed.acidity)
+hist(red_wine$volatile.acidity)
+hist(red_wine$citric.acid)
+hist(red_wine$residual.sugar)
+hist(red_wine$chlorides)
+hist(red_wine$free.sulfur.dioxide)
+hist(red_wine$total.sulfur.dioxide)
+hist(red_wine$density)
+hist(red_wine$pH)
+hist(red_wine$sulphates)
+hist(red_wine$alcohol)
+hist(red_wine$quality)
+```
+
+**Distribution of Red Wine** The red wine dataset contains several chemical characteristics, including fixed acidity, volatile acidity, citric acid, residual sugar, chlorides, sulfur dioxide, density, pH, sulphates, and alcohol, along with a quality rating. The summary statistics suggest that the distributions vary across the different variables. Several variables, including residual sugar, chlorides, free sulfur dioxide, total sulfur dioxide, and sulphates, appear to be right-skewed, as there are long right tails present in the histogram and the means are greater than their medians. In contrast, density and pH have means and medians that are nearly the same, suggesting relatively symmetric distributions.
+
+There is also considerable variation in the ranges of some variables. For instance, total sulfur dioxide ranges from 6 to 289, while residual sugar ranges from 0.9 to 15.5. These large ranges, along with the differences between their means and medians, suggest the possibility of unusually high observations.
+
+### Stage 2 - White Wine
+
+```{r}
+# looking at the trends for white wine
+summary(white_wine)
+
+# creating histograms to see visuals of the trends
+par(mfrow = c(2,3))
+hist(white_wine$fixed.acidity)
+hist(white_wine$volatile.acidity)
+hist(white_wine$citric.acid)
+hist(white_wine$residual.sugar)
+hist(white_wine$chlorides)
+hist(white_wine$free.sulfur.dioxide)
+hist(white_wine$total.sulfur.dioxide)
+hist(white_wine$density)
+hist(white_wine$pH)
+hist(white_wine$sulphates)
+hist(white_wine$alcohol)
+hist(white_wine$quality)
+```
+
+**Distribution of White Wine** The white wine dataset displays a variety of distribution shapes across its chemical characteristics. Fixed acidity, density, and pH appear approximately symmetric, as their means and medians are relatively close. Several other variables, including residual sugar, volatile acidity, citric acid, chlorides, and sulphates, show indications of right skewness, with their means exceeding their medians and the histograms have a long right tail. Residual sugar displays a particularly noticeable difference between its mean and median, suggesting a more pronounced right-skewed distribution.
+
+## Correlation Analysis
+
+### Stage 1 - Red Wine
+
+```{r}
+# correlation matrix
+cor(red_wine)
+```
+
+The correlation matrix shows the relationships between wine quality, the target variable, and the other explanatory variables in the dataset. The purpose of this analysis is to identify which chemical characteristics have the strongest relationships with wine quality. Based on the correlation matrix, alcohol (0.48) has the strongest positive relationship with quality, followed by sulphates (0.25) and citric acid (0.23). This suggests that wines with higher alcohol content tend to receive higher quality ratings. Citric acid also has a positive relationship with quality, which may be related to its contribution to the freshness and flavor profile of wine.
+
+On the other hand, volatile acidity (-0.39) has the strongest negative relationship with quality. Higher volatile acidity is associated with lower quality ratings, most likely because elevated levels can contribute undesirable vinegar flavors. Alcohol and volatile acidity appear to have the strongest linear relationships with wine quality among the variables examined.
+
+**Scatterplots**
+
+```{r}
+# alcohol
+plot(red_wine$alcohol, red_wine$quality, main = "Alcohol vs Wine Quality", 
+     xlab = "Alcohol", ylab = "Quality")
+
+abline(lm(quality~ alcohol, data = red_wine), col = "red")
+
+# volatile
+plot(red_wine$volatile.acidity, red_wine$quality, 
+     main = "volatile.acidity vs Wine Quality", xlab = "volatile.acidity", ylab = "Quality")
+
+abline(lm(quality~ volatile.acidity, data = red_wine), col = "red")
+
+# sulphates
+plot(red_wine$sulphates, red_wine$quality, 
+     main = "sulphates vs Wine Quality", xlab = "sulphates", ylab = "Quality")
+
+abline(lm(quality~ sulphates, data = red_wine), col = "red")
+
+# citric acid
+plot(red_wine$citric.acid, red_wine$quality, 
+     main = "citric.acid vs Wine Quality", xlab = "citric.acid", ylab = "Quality")
+
+abline(lm(quality~ citric.acid, data = red_wine), col = "red")
+
+```
+
+The scatterplots show how each of the four variables most correlated with quality relates to the rating. Because quality is a whole-number score, the points fall in horizontal bands, so the red trend lines are more informative than the individual points. Alcohol shows the clearest upward trend (r = 0.48), higher-alcohol wines tend to receive higher ratings, though there is spread at every alcohol level. Volatile acidity is the only one of the four with a downward trend (r = -0.39), meaning wines with more volatile acidity tend to be rated lower, which is consistent with the vinegar-like taste associated with acetic acid. Sulphates (r = 0.25) and citric acid (r = 0.23) both slope upward, but the relationships are weak and the points are widely scattered around the line. Sulphates also has a few very high values that may be pulling the trend line. So no single variable explains quality on its own, which suggests that a multivariable model will be needed to understand what drives it.
+
+### Stage 2 - White Wine
+
+```{r}
+cor(white_wine)
+```
+
+The correlation matrix for white wine shows that alcohol has the strongest positive linear association with quality (r = 0.43). Wines with higher alcohol content tend to receive higher ratings, although alcohol alone does not determine quality. Density (r = -0.307) has the strongest negative association, followed by chlorides (r = -0.209), volatile acidity (r = -0.19), and total sulfur dioxide (r = -0.174), while fixed acidity (r = -0.11) is only weakly related. Density is strongly negatively correlated with alcohol, so its relationship with quality likely reflects alcohol content rather than an independent effect. Higher chlorides (salt) and volatile acidity (vinegar-like) may be perceived as off-flavors, and higher total sulfur dioxide may indicate heavier preservation, which could affect aroma. These associations are all modest, and since correlation does not imply causation, a multivariable model is needed to separate their effects.
+
+```{r}
+# alcohol
+plot(white_wine$alcohol, white_wine$quality)
+abline(lm(quality~alcohol, data = white_wine), col = "blue")
+
+# density
+plot(white_wine$density, white_wine$quality)
+abline(lm(quality~density, data = white_wine), col = "blue")
+
+# chlorides
+plot(white_wine$chlorides, white_wine$quality)
+abline(lm(quality~chlorides, data = white_wine), col = "blue")
+
+# volatile acidity
+plot(white_wine$volatile.acidity, white_wine$quality)
+abline(lm(quality~volatile.acidity, data = white_wine), col = "blue")
+
+# total sulfur dioxide
+plot(white_wine$total.sulfur.dioxide, white_wine$quality)
+abline(lm(quality~total.sulfur.dioxide, data = white_wine), col = "blue")
+```
+
+The scatterplots illustrate the correlations between quality and the five predictors with the strongest associations. Because quality is scored on a whole-number scale, the points form horizontal bands, so the trend lines are more informative than individual points. Alcohol is the only predictor with an upward trend (r = 0.43) higher-alcohol wines tend to receive higher ratings. The other predictors slope downward. Density (r = -0.31) shows the steepest decline, followed by chlorides (r = -0.21), volatile acidity (r = -0.19), and total sulfur dioxide (r = -0.17). Higher volatile acidity is associated with lower ratings, consistent with the vinegar-like taste of acetic acid. Fixed acidity (r = -0.11) has only a slight downward trend.
+
+## Stating and Testing Hypotheses
+
+Based on the EDA and background on wine chemistry, I hypothesize that alcohol is positively associated with quality, and volatile acidity negatively associated, in both red and white wine. Linear regression assumptions (linearity, constant variance, normality of residuals, independence, and low multicollinearity) will be checked first. If they are reasonably met, predictors are compared using p-values and standardized coefficients.
+
+### Stage 1 - Red Wine
+
+```{r}
+# loading package
+library(car)
+
+# forming model
+mod <- lm(quality ~ ., data = red_wine)
+summary(mod)
+vif(mod)
+
+# checking for assumptions
+par(mfrow = c(1,1))
+plot(mod)
+```
+
+The residuals vs fitted plot shows a nearly flat trend line at zero, with a slight lift at the lower end of the fitted values. Linearity assumption is reasonable. The scale-location plot shows a fairly constant band of points, meaning the spread is roughly even. There is still a dip in the trend line that increases as the fitted values increase, but constant variance assumption is reasonable. Normality can be assumed as the points follow the trend line in the Q-Q residuals plot where only the lower tail end of the observations drift from the line. There are also no concerning influential points based on the residuals and leverage plot.
+
+When looking at multicollinearity which is if two or more predictor variables are strongly correlated with each other. Fixed acidity and density are the highest at 7.8 and 6.3 respectively raising some concerns with those predictors. Therefore, I will remove one predictor at a time and examine if that improves multicollinearity, starting with the highest fixed acidity.
+
+**Removing Fixed Acidity From Model**
+
+```{r}
+library(car)
+
+# forming model
+mod <- lm(quality ~ . - fixed.acidity, data = red_wine)
+summary(mod)
+vif(mod)
+
+# checking for assumptions
+par(mfrow = c(1,1))
+plot(mod)
+```
+
+After removing fixed acidity the concerns about multicollinearity are fixed, and the model holds the same assumptions as the model that included fixed acidity.
+
+Comparing the adjusted R-squared of both models can help determine which model explains the most variation in the response variable, wine quality. The Adjusted R-squared is 0.3561 for the model with fixed acidity and for the model without fixed acidity is 0.3561. Because the adjusted R-squared is unchanged and the model without fixed acidity meets the model assumptions and does not have any multicollinearity concerns, that will be the model used to determine if alcohol has the strongest association with wine quality or if its another chemical property.
+
+### Stage 2 - White Wine
+
+```{r}
+# loading package
+library(car)
+
+# forming model
+mod <- lm(quality ~ ., data = white_wine)
+summary(mod)
+vif(mod)
+
+# checking for assumptions
+par(mfrow = c(1,1))
+plot(mod)
+```
+
+The diagnostics suggest that the linearity assumption is reasonably satisfied, as the residual smoother is relatively flat except at the far left, where a few low fitted values cause a slight upward deviation. The constant variance assumption also appears reasonably satisfied based on the relatively flat Scale-Location line. The Q-Q plot indicates normality. In the residuals vs leverage plot, observation 2782 has particularly high leverage, indicating that it may have a substantial influence on the model. Observations 4746 and 3308 also have relatively large negative residuals. These observations warrant further investigation to determine their influence on the regression results.
+
+Multicollinearity is another concern within the model. The VIF coefficients indicate particularly high multicollinearity for density (28) and residual sugar (13), with alcohol also showing an elevated VIF (7.7). This suggests that some predictors share substantial overlapping information, potentially making their regression coefficients unstable. Density, in particular, has a large coefficient and appears disproportionately influential in the ranking of predictors. Removing density and refitting the model may help address this issue.
+
+**Removing Density From Model**
+
+```{r}
+# forming model
+mod <- lm(quality ~ .-density, data = white_wine)
+summary(mod)
+vif(mod)
+
+# checking for assumptions
+par(mfrow = c(1,1))
+plot(mod)
+```
+The residual plots still show the same patterns. The Residuals vs. Fitted smoother is flat, and the Q-Q plots show the same tail deviations, with linearity met and constant variance and normality approximately met. The very high-leverage point flagged (observation 2782) no longer stands out, so no need to remove anything.
+
+Multicollinearity was assessed using variance inflation factors (VIF), with a threshold of 5. Variables were removed one at a time, starting with the highest VIF. Density with vif = 28 was removed. After removal, all the vif coefficients are below 5. This keeps the coefficient estimates stable enough to compare the strength of each characteristic’s association with quality.
+
+Adjusted R-squared in the model including all predictors is 0.2803 and the model without density is 0.271 which is a small cost for removing the unstable density term.
+
+## Findings on the Models
+A multiple linear regression was fit for red wine with quality as the response. Fixed acidity was removed because its VIF (7.8) exceeded the threshold of 5, and all remaining VIFs were below 5. The model explains about 36% of the variation in quality (adjusted R-squared = 0.356). Alcohol, volatile acidity, sulphates, total sulfur dioxide, chlorides, and pH were all statistically significant (p < 0.05), and free sulfur dioxide was marginally significant (p = 0.034) at the 0.05 level. Citric acid, residual sugar, and density were not significant. Holding the other variables constant, each additional percentage point of alcohol is associated with an increase of about 0.29 points in predicted quality, and each additional unit of volatile acidity is associated with a decrease of about 1.08 points. Sulphates are positively associated with quality, while total sulfur dioxide, chlorides, and pH are negatively associated. Comparing standardized coefficients, alcohol (0.38) has the strongest association with quality, followed by volatile acidity (-0.24) and sulphates (0.19).
+
+A multiple linear regression was also fit for white wine. Density was removed because its VIF (28.2) indicated severe multicollinearity, largely with residual sugar and alcohol, and after its removal all VIFs were below 5. The model explains about 27% of the variation in quality (adjusted R-squared = 0.271). Alcohol, volatile acidity, residual sugar, free sulfur dioxide, sulphates, total sulfur dioxide, and pH, and fixed acidity were significant at the 0.05 level. Chlorides and citric acid were not significant. Holding the other variables constant, each additional percentage point of alcohol is associated with an increase of about 0.36 points in predicted quality, and each additional unit of volatile acidity with a decrease of about 1.96 points. Alcohol has by far the largest standardized coefficient (0.50), followed by volatile acidity (-0.22) and residual sugar (0.15), while the remaining significant predictors have small effects (standardized coefficients below 0.10).
+
+# Conclusion
+The purpose of this analysis was to investigate which chemical characteristics have the strongest relationships with the quality ratings of red and white wines. Based on the results of both regression models, alcohol has the strongest positive association with wine quality, while volatile acidity has the strongest negative association. This suggests that wines with higher alcohol content tend to receive higher quality ratings, whereas wines with higher volatile acidity tend to receive lower ratings. Monitoring alcohol levels and controlling volatile acidity may be particularly important considerations when evaluating wine characteristics associated with higher ratings. However, these relationships should be interpreted as associations rather than causal effects, since the analysis does not establish that changing these characteristics will directly improve wine quality.
+
+Throughout the modeling process, certain predictors were removed to address multicollinearity. Fixed acidity was removed from the red wine model, while density was removed from the white wine model because their VIF values exceeded the acceptable threshold of 5. High multicollinearity can make regression coefficients difficult to interpret because predictors share overlapping information. Removing these variables helped address this issue and improve the interpretability of the models.
+
+Although the models identified several meaningful relationships, there are limitations to consider. The red wine model had an R-squared value of approximately 0.36, while the white wine model had an R-squared value of approximately 0.27. This indicates that the models explain approximately 36% and 27% of the variation in wine quality, respectively, meaning that most of the variation remains unexplained. Additionally, wine quality is measured using discrete sensory ratings, with most observations concentrated around ratings of 5 and 6. The normality and constant variance assumptions were also only approximately satisfied. The dataset does not account for other potentially influential characteristics, such as grape variety, wine price, or vineyard conditions.
+
+When comparing the two types of wine, alcohol and volatile acidity demonstrate important relationships with quality in both datasets. However, sulphates and chlorides appear more influential in the red wine model, while residual sugar has a more notable relationship with quality in the white wine model. These differences suggest that certain chemical characteristics may have varying relationships with the quality of red and white wines.
